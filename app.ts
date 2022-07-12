@@ -1,10 +1,12 @@
+import { Request, Response } from "express";
+
 const express = require('express');
 const app = express();
 const axios = require('axios');
 require("dotenv").config();
 const port = 3000;
 
-app.get("/movie/popular", async (req, res) => {
+app.get("/movie/popular", async (req: Request, res: Response) => {
   try {
     const result = await axios.get(`https://api.themoviedb.org/3/movie/popular?api_key=${process.env.API_KEY}`);
     res.send(result.data.results);
@@ -15,7 +17,7 @@ app.get("/movie/popular", async (req, res) => {
 });
 
 
-app.get("/movie/:movieId", async (req, res) => {
+app.get("/movie/:movieId", async (req: Request, res: Response) => {
   try {
     const result = await axios.get(
       `https://api.themoviedb.org/3/movie/${req.params.movieId}?api_key=${process.env.API_KEY}`
