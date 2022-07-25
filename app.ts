@@ -3,6 +3,10 @@ import express from 'express';
 import axios from 'axios';
 import 'dotenv/config';
 import cors from 'cors';
+import * as sqlite3 from 'sqlite3';
+import * as jwt from 'jsonwebtoken';
+// import * as bcrypt from 'bcryptjs';
+
 import { GenreType, Movie, MovieDetails } from './src/types/movies';
 import { TMBDMovieDetails, TMDBMovie } from './src/types/tmdb';
 
@@ -10,14 +14,21 @@ const app = express();
 const port = 3000;
 const imageUrl = 'https://image.tmdb.org/t/p/original';
 
+// CORS
 const options: cors.CorsOptions = {
   optionsSuccessStatus: 200
 };
 app.use(cors(options));
 app.use(express.json());
 
+// ROUTER
+const router = express.Router();
+app.use('/', router);
 
-app.get('/movie/popular', cors(options), async (req: Request, res: Response) => {
+// DB
+const database = new sqlite3.Database("./my.db");
+
+router.get('/movie/popular', async (req: Request, res: Response) => {
   try {
     const results = await axios.get(
         `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.API_KEY}`
@@ -56,7 +67,7 @@ app.get('/movie/popular', cors(options), async (req: Request, res: Response) => 
 }
 });
 
-app.get('/movie/:movieId', async (req: Request, res: Response) => {
+router.get('/movie/:movieId', async (req: Request, res: Response) => {
     try {
         const results = await axios.get(
       `https://api.themoviedb.org/3/movie/${req.params.movieId}?api_key=${process.env.API_KEY}`
@@ -82,6 +93,32 @@ app.get('/movie/:movieId', async (req: Request, res: Response) => {
         res.status(404).send(error);
     }
 });
+
+const findUserByEmail = (email: string, cb) => {
+    return database.get(`SELECT * FROM users WHERE email = ?`, [email], (err, row) => {
+        //? cb ? row ?
+        cb(err, row)
+    });
+}
+
+router.post('/auth', async (req: Request, res: Response) => {
+  try {
+    const email = req.body.email;
+    const password = req.body.password;
+
+    findUserByEmail(email, (err, user: {id: number, password: string}) => {
+        if (err) return res.status(500).send('Server error!');
+        if (!user) return res.status(404).send('User not found!');
+        if (password !== user.password) return res.status(401).send('Password not valid!');
+        const accessToken = jwt.sign({ id: user.id }, password);
+        res.status(200).send({ "user": user, "access_token": accessToken });
+    });
+
+  } catch (err) {
+    console.log(err);
+  }
+});
+
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);
