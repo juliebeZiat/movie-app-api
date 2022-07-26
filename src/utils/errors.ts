@@ -13,3 +13,11 @@ export class UserAlreadyExistsError extends Error {
     super(message);
   }
 }
+
+export class UserNotFoundError extends Error {
+  name = 'userNotFound';
+
+  constructor(message: string) {
+    super(message);
+  }
+}
