@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import authService from './auth.service';
 import validate from '../utils/validation';
 import userService from '../user/user.service';
 import { IUser } from '../types/user';
-import { InvalidCredentialsError, UserAlreadyExistsError } from '../utils/errors';
+import { InvalidCredentialsError } from '../utils/errors';
 
 const signIn = async (req: Request, res: Response) => {
   try {
@@ -57,28 +56,35 @@ const signUp = async (req: Request, res: Response) => {
       throw new InvalidCredentialsError('Password is not valid');
     }
 
-    userService.findByEmail(email, function (err, user) {
-      if (user) {
-        throw new UserAlreadyExistsError(`User with email ${email} already exists`);
+    userService.create([name, email, password], (err) => {
+      if (err) {
+        if (err.message === 'SQLITE_CONSTRAINT: UNIQUE constraint failed: users.email') {
+          res.status(403).send("User already exists");
+          return;
+        }
+        res.status(500).send(err);
+        return;
       }
+
+      userService.findByEmail(email, (err, user) => {
+        if (err) {
+          res.status(500).send("Server error!");
+          return;
+        }
+        const accessToken = jwt.sign({id: user.id}, process.env.SECRET_KEY as string);
+        res.status(200).send({"user": user, "access_token": accessToken});
+      })
     });
-    
-    const authUser = await authService.createUser(req.body);
-    res.status(201).send(authUser);
 
   } catch (error) {
+    console.log(error);
+    
     if (isError(error)) {
       if (error.name === 'invalidCredentials') {
         res.status(400).send(error.message);
         return;
       }
-
-      if (error.name === 'userAlreadyExists') {
-        res.status(403).send(error.message);
-        return;
-      }
     }
-
     res.status(500).send(error);
   }
 };
