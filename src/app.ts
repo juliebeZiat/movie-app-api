@@ -5,7 +5,7 @@ import bodyParser from 'body-parser';
 import movieRouter from './movie/movie.routes';
 import authRouter from './auth/auth.routes';
 import sqlite3 from 'sqlite3';
-
+import userRouter from './user/user.routes';
 
 const app = express();
 const port = 3000;
@@ -16,6 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // ROUTES 
 app.use('/movie', movieRouter);
 app.use('/auth', authRouter);
+app.use('/user', userRouter);
 
 // CORS
 const options: cors.CorsOptions = {

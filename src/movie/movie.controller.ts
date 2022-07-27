@@ -19,7 +19,7 @@ const getDetails = async (req: Request, res: Response) => {
     console.log(error);
     res.end();
   }
-}
+};
 
 const movieController = {
   getPopular,

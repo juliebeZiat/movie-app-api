@@ -3,30 +3,26 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import validate from '../utils/validation';
 import userService from '../user/user.service';
-import {
-  InvalidCredentialsError,
-  UserAlreadyExistsError,
-  UserNotFoundError,
-} from '../utils/errors';
 import authService from './auth.service';
+import newError from '../utils/errors';
 
 const signIn = async (req: Request, res: Response) => {
-  try {
+  try {    
     const { email, password } = req.body;
 
     const user = await userService.findByEmail(email);
 
     if (!user) {
-      throw new UserNotFoundError(`User with email: ${email} does not exist`);
+      throw new newError.UserNotFound(`User with email: ${email} does not exist`);
     }
 
     const comparePassword = bcrypt.compareSync(password, user.password);
 
     if (!comparePassword) {
-      throw new InvalidCredentialsError('Password not valid');
+      throw new newError.InvalidCredentials('Password not valid');
     }
 
-    const accessToken = jwt.sign({ id: user.id }, password);
+    const accessToken = jwt.sign({ id: user.id }, process.env.SECRET_KEY as string);
     res.status(200).send({ user: user, access_token: accessToken });
   } catch (err) {
     if (isError(err)) {
@@ -52,21 +48,21 @@ const signUp = async (req: Request, res: Response) => {
     const isPasswordValid: boolean = validate.password(password);
 
     if (!isNameValid) {
-      throw new InvalidCredentialsError('Name is not valid');
+      throw new newError.InvalidCredentials('Name is not valid');
     }
 
     if (!isEmailValid) {
-      throw new InvalidCredentialsError('Email is not valid');
+      throw new newError.InvalidCredentials('Email is not valid');
     }
 
     if (!isPasswordValid) {
-      throw new InvalidCredentialsError('Password is not valid');
+      throw new newError.InvalidCredentials('Password is not valid');
     }
 
     const user = await userService.findByEmail(email);
 
     if (user) {
-      throw new UserAlreadyExistsError('User already exists');
+      throw new newError.UserAlreadyExists('User already exists');
     }
 
     const authUser = await authService.createUser(req.body);

@@ -1,4 +1,4 @@
-export class InvalidCredentialsError extends Error {
+class InvalidCredentials extends Error {
   name = 'invalidCredentials'
   
   constructor(message: string) {
@@ -6,7 +6,7 @@ export class InvalidCredentialsError extends Error {
   }
 }
 
-export class UserAlreadyExistsError extends Error {
+class UserAlreadyExists extends Error {
   name = 'userAlreadyExists'
   
   constructor(message: string) {
@@ -14,10 +14,18 @@ export class UserAlreadyExistsError extends Error {
   }
 }
 
-export class UserNotFoundError extends Error {
+class UserNotFound extends Error {
   name = 'userNotFound';
 
   constructor(message: string) {
     super(message);
   }
 }
+
+const newError = {
+  InvalidCredentials,
+  UserAlreadyExists,
+  UserNotFound,
+};
+
+export default newError;

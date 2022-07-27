@@ -16,19 +16,8 @@ const findByEmail = (email: string): Promise<IUser> => {
   });
 };
 
-const create = (user: string[], cb: (err: Error | null) => void) => {
-  return database.run(
-    'INSERT INTO users (name, email, password) VALUES (?,?,?)',
-    user,
-    (err) => {
-      cb(err);
-    }
-  );
-};
-
 const userService = {
   findByEmail,
-  create,
 };
 
 export default userService;
