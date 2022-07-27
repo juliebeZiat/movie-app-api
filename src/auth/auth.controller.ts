@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import validate from '../utils/validation';
-import userService from '../user/user.service';
 import authService from './auth.service';
 import newError from '../utils/errors';
 
@@ -10,7 +9,7 @@ const signIn = async (req: Request, res: Response) => {
   try {    
     const { email, password } = req.body;
 
-    const user = await userService.findByEmail(email);
+    const user = await authService.findByEmail(email);
 
     if (!user) {
       throw new newError.UserNotFound(`User with email: ${email} does not exist`);
@@ -59,7 +58,7 @@ const signUp = async (req: Request, res: Response) => {
       throw new newError.InvalidCredentials('Password is not valid');
     }
 
-    const user = await userService.findByEmail(email);
+    const user = await authService.findByEmail(email);
 
     if (user) {
       throw new newError.UserAlreadyExists('User already exists');

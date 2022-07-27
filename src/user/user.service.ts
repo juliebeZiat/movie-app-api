@@ -1,11 +1,11 @@
 import { database } from '../app';
-import { IUser } from '../types/user';
+import { List } from './user.controller';
 
-const findByEmail = (email: string): Promise<IUser> => {
+const isUserHasList = async (token: {id: number}) => {
   return new Promise((resolve, reject) => {
     database.get(
-      `SELECT * FROM users WHERE email = ?`,
-      [email],
+      `SELECT * FROM user_list WHERE userId = ?`,
+      [token.id],
       function (err, row) {
         if (err) {
           reject(err);
@@ -16,8 +16,41 @@ const findByEmail = (email: string): Promise<IUser> => {
   });
 };
 
+const createNewList = async (token: {id: number}) => {
+  return new Promise((resolve, reject) => {
+    database.run(
+      'INSERT INTO user_list (userId) VALUES (?)',
+      [token.id],
+      function (err) {
+        if (err) {
+          reject(err);
+        }
+        resolve(this.lastID);
+      }
+    );
+  });
+};
+
+const getList = async (token: {id: number}, movies: number[]): Promise<List> => {
+  return new Promise((resolve, reject) => {
+    database.each(
+      `SELECT * FROM user_list WHERE userId = ?`,
+      [token.id],
+      function (err, row) {
+        if (err) {
+          reject(err);
+        }
+        movies.push(row.movies);
+        resolve(row);
+      }
+    );
+  })
+};
+
 const userService = {
-  findByEmail,
+  isUserHasList,
+  createNewList,
+  getList,
 };
 
 export default userService;

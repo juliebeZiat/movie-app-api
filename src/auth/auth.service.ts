@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { database } from '../app';
+import { IUser } from '../types/user';
 
 const createUser = async (userDto: {
   name: string;
@@ -35,8 +36,24 @@ const createUser = async (userDto: {
   }
 };
 
+const findByEmail = (email: string): Promise<IUser> => {
+  return new Promise((resolve, reject) => {
+    database.get(
+      `SELECT * FROM users WHERE email = ?`,
+      [email],
+      function (err, row) {
+        if (err) {
+          reject(err);
+        }
+        resolve(row);
+      }
+    );
+  });
+};
+
 const authService = {
   createUser,
+  findByEmail,
 };
 
 export default authService;

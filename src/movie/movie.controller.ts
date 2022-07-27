@@ -6,7 +6,7 @@ const getPopular = async (req: Request, res: Response) => {
     const results = await movieService.getPopular();
     return res.send(results);
   } catch (error) {
-    console.log(error);
+    res.status(500).send(error);
     res.end();
   }
 };
@@ -16,7 +16,7 @@ const getDetails = async (req: Request, res: Response) => {
     const results = await movieService.getDetails(req.params.movieId);
     return res.send(results);
   } catch (error) {
-    console.log(error);
+    res.status(500).send(error);
     res.end();
   }
 };
