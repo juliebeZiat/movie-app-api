@@ -16,21 +16,6 @@ const isUserHasList = async (token: {id: number}) => {
   });
 };
 
-const createNewList = async (token: {id: number}) => {
-  return new Promise((resolve, reject) => {
-    database.run(
-      'INSERT INTO user_list (userId) VALUES (?)',
-      [token.id],
-      function (err) {
-        if (err) {
-          reject(err);
-        }
-        resolve(this.lastID);
-      }
-    );
-  });
-};
-
 const getList = async (token: {id: number}, movies: number[]): Promise<List> => {
   return new Promise((resolve, reject) => {
     database.each(
@@ -47,10 +32,25 @@ const getList = async (token: {id: number}, movies: number[]): Promise<List> => 
   })
 };
 
+const addItem = async (token: {id: number}, movie: number[]) => {
+  return new Promise((resolve, reject) => {
+    database.run(
+      `INSERT INTO user_list (userId, movies) VALUES (?,?)`,
+      [token.id, movie],
+      function (err) {
+        if (err) {
+          reject(err);
+        }
+        resolve(this.lastID);
+      }
+    )
+  });
+}
+
 const userService = {
   isUserHasList,
-  createNewList,
   getList,
+  addItem,
 };
 
 export default userService;
