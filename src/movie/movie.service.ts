@@ -11,8 +11,6 @@ export interface List {
 
 const getPopular = async () => {
   try {
-    console.log('service getPopular')
-
     const results = await axios.get(
       `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.API_KEY}`
     );
@@ -50,7 +48,6 @@ const getPopular = async () => {
 
 const getDetails = async (movieId: string) => {
   try {
-    console.log('service getDetails')
     const results = await axios.get(
       `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.API_KEY}`
     );
@@ -90,7 +87,7 @@ const getList = async (userId: number): Promise<List> => {
 };
 
 
-const createList = async (userId: number) => {
+const createList = async (userId: number): Promise<number> => {
   return new Promise((resolve, reject) => {
     database.run(
       'INSERT INTO user_list (user_id) VALUES (?)',
@@ -120,23 +117,20 @@ const addMovie = async (listId: number, movieId: number) => {
   });
 };
 
-const getMovies = async (listId: number) => {
-  const movies: number[] = [];
+const getMovies = async (listId: number): Promise<{movie: number}[]> => {
   return new Promise((resolve, reject) => {
-    database.each(
+    database.all(
       'SELECT movie FROM lists WHERE list_id = ?',
       [listId],
       function (err, row) {
         if (err) {
           reject(err);
         }
-        movies.push(row.movie);
-        resolve(movies);
+        resolve(row);
       }
     );
   });
 };
-
 
 
 const movieService = {

@@ -22,14 +22,6 @@ class UserNotFound extends Error {
   }
 }
 
-class ItemNotFound extends Error {
-  name = 'itemNotFound';
-
-  constructor(message: string) {
-    super(message);
-  }
-}
-
 class ItemAlreadyAdded extends Error {
   name = 'itemAlreadyAdded';
 
@@ -43,7 +35,6 @@ const newError = {
   UserAlreadyExists,
   UserNotFound,
   ItemAlreadyAdded,
-  ItemNotFound,
 };
 
 export default newError;

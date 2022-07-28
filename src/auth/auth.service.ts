@@ -11,7 +11,7 @@ const createUser = async (userDto: {
   try {
     const hashedPassword = await bcrypt.hash(userDto.password, 10);
 
-    const userId = await new Promise((resolve, reject) => {
+    const userId: number = await new Promise((resolve, reject) => {
       database.run(
         'INSERT INTO users (name, email, password) VALUES (?,?,?)',
         [userDto.name, userDto.email, hashedPassword],
