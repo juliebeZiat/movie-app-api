@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import validate from '../utils/validation';
 import authService from './auth.service';
 import newError from '../utils/errors';
+import movieService from '../movie/movie.service';
 
 const signIn = async (req: Request, res: Response) => {
   try {    
@@ -22,6 +23,7 @@ const signIn = async (req: Request, res: Response) => {
     }
 
     const accessToken = jwt.sign({ id: user.id }, process.env.SECRET_KEY as string);
+
     res.status(200).send({ user: user, access_token: accessToken });
   } catch (err) {
     if (isError(err)) {
@@ -65,6 +67,9 @@ const signUp = async (req: Request, res: Response) => {
     }
 
     const authUser = await authService.createUser(req.body);
+
+    await movieService.createList(authUser.user.id);
+
     res.status(201).send(authUser);
   } catch (error) {
     if (isError(error)) {

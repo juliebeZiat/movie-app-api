@@ -5,7 +5,7 @@ import userController from './user.controller';
 const userRouter = express.Router();
 
 userRouter.get('/list', jwtMiddleware, userController.getUserList);
-userRouter.put('/list', jwtMiddleware, userController.addMovie);
+// userRouter.put('/list', jwtMiddleware, userController.addMovie);
 
 export default userRouter;
 
