@@ -22,10 +22,28 @@ class UserNotFound extends Error {
   }
 }
 
+class ItemNotFound extends Error {
+  name = 'itemNotFound';
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+class ItemAlreadyAdded extends Error {
+  name = 'itemAlreadyAdded';
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 const newError = {
   InvalidCredentials,
   UserAlreadyExists,
   UserNotFound,
+  ItemAlreadyAdded,
+  ItemNotFound,
 };
 
 export default newError;

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import movieController from '../movie/movie.controller';
 import movieService from '../movie/movie.service';
 import { MovieDetails } from '../types/movies';
 import { decodeToken } from '../utils/decodeToken';
+import newError from '../utils/errors';
 import userService from './user.service';
 
 export interface List {
@@ -41,14 +41,13 @@ const addMovie = async (req: Request, res: Response) => {
   const userId = decodeToken(token);
 
   const results = await movieService.getPopular();
-  const getIdsPopularMovies = results.map((movie: MovieDetails) => movie._id)
-  console.log(getIdsPopularMovies);
+  const getIdsPopularMovies = results.map((movie: MovieDetails) => movie._id);
   
   try {
     if (!getIdsPopularMovies.includes(movieId)) {
-      throw new Error();
+      throw new newError.ItemNotFound('This item doesn\'t exist');
     }
-    
+
     const user = await userService.isUserHasList(userId);
     
     //* À AMELIORER
@@ -62,7 +61,7 @@ const addMovie = async (req: Request, res: Response) => {
       const newMovie: number = movies.find((e) => e === movieId) as number;
   
       if (movies.includes(newMovie)) {
-        throw new Error();
+        throw new newError.ItemAlreadyAdded('This item is already added to the list');
       } else {
         await userService.addItem(userId, movieId);
         movies.push(movieId);
@@ -70,9 +69,23 @@ const addMovie = async (req: Request, res: Response) => {
       }
     }
 
-  } catch (error) {
-    res.status(500).send(error);
+  } catch (err) {
+    if (isError(err)) {
+      if (err.name === 'itemNotFound') {
+        res.status(404).send(err.message);
+        return;
+      }
+
+      if (err.name === 'itemAlreadyAdded') {
+        res.status(409).send(err.message);
+        return;
+      }
+    }
   }
+};
+
+const isError = (error: unknown): error is Error => {
+  return error instanceof Error;
 };
 
 const userController = {

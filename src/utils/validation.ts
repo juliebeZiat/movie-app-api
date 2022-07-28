@@ -15,8 +15,20 @@ const password = (password?: string): boolean => {
     return false
   }
 
-  if (password.trim().length <= 8) {
+  if (password.trim().length <= 4) {
     return false
+  }
+
+  const mustContainOneNumer = /([0-9])/;
+
+  if(!mustContainOneNumer.test(password)) {
+    return false;
+  }
+
+  const mustContainOneUppercase = /([A-Z])/;
+
+  if(!mustContainOneUppercase.test(password)) {
+    return false;
   }
 
   return true;
