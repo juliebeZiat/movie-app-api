@@ -23,7 +23,7 @@ const getDetails = async (req: Request, res: Response) => {
 };
 
 const getList = async (req: Request, res: Response) => {
-  const userId = req.user?.id;
+  const userId = req.user;
 
   if (!userId) {
     throw new Error();
@@ -31,10 +31,7 @@ const getList = async (req: Request, res: Response) => {
   
   try {
     const list = await movieService.getList(userId);
-
-    const getMovies = await movieService.getMovies(list.list_id);
-    
-    res.send({ user_id: userId, list_id: list.list_id, movies: getMovies ? getMovies : [] });
+    res.send({ userId: userId, list });
 
   } catch (error) {
     res.status(500).send(error);
@@ -42,8 +39,8 @@ const getList = async (req: Request, res: Response) => {
   }
 };
 
-const addItem = async (req: Request, res: Response) => {
-  const userId = req.user?.id;
+const add = async (req: Request, res: Response) => {
+  const userId = req.user;
 
   if (!userId) {
     throw new Error();
@@ -52,26 +49,28 @@ const addItem = async (req: Request, res: Response) => {
   const { movieId } = req.body;
 
   try {
-    const getListOfCurrentUser = await movieService.getList(userId);
+    const list = await movieService.getList(userId);
 
-    const getMoviesOfCurrentUser = await movieService.getMovies(getListOfCurrentUser.list_id);
-    const getIds = getMoviesOfCurrentUser.map((movie) => movie.movie);
+    if (!list.movies) {
+      return;
+    }
 
-    if (getIds.includes(movieId)) {
+    if (list.movies.includes(movieId)) {
       throw new newError.ItemAlreadyAdded('This item is already added to the list');
     };
-    
-    await movieService.addMovie(getListOfCurrentUser.list_id, movieId);
 
-    res.send({ newMovie: movieId });
+    const isMovieExists = await movieService.getDetails(movieId);
+
+    if (isMovieExists.code === 'ERR_BAD_REQUEST') {
+      res.status(404).send('This movie doesn\'t exist');
+    }
+ 
+    await movieService.add(list.id, movieId);
+
+    res.send({ newMovie: movieId, title: isMovieExists.title });
 
   } catch (err) {
-    if (isError(err)) {
-      if (err.name === 'itemNotFound') {
-        res.status(404).send(err.message);
-        return;
-      }
-
+    if (newError.isError(err)) {
       if (err.name === 'itemAlreadyAdded') {
         res.status(409).send(err.message);
         return;
@@ -80,15 +79,46 @@ const addItem = async (req: Request, res: Response) => {
   }
 };
 
-const isError = (error: unknown): error is Error => {
-  return error instanceof Error;
+const remove = async (req: Request, res: Response) => {
+  const userId = req.user;
+
+  if (!userId) {
+    throw new Error();
+  }
+
+  const { movieId } = req.body;
+
+  try {
+    const list = await movieService.getList(userId);
+
+    if (!list.movies) {
+      return;
+    }
+
+    if (!list.movies.includes(movieId)) {
+      throw new newError.ItemNotFound('This item is not in the list');
+    };
+
+    await movieService.remove(list.id, movieId);
+
+    res.send({ removedMovie: movieId });
+
+  } catch (err) {
+    if (newError.isError(err)) {
+      if (err.name === 'itemNotFound') {
+        res.status(404).send(err.message);
+        return;
+      }
+    }
+  }
 };
 
 const movieController = {
   getPopular,
   getDetails,
   getList,
-  addItem,
+  add,
+  remove,
 };
 
 export default movieController;

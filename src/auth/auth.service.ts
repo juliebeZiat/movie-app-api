@@ -51,9 +51,25 @@ const findByEmail = (email: string): Promise<IUser> => {
   });
 };
 
+const findById = (id: number): Promise<IUser> => {
+  return new Promise((resolve, reject) => {
+    database.get(
+      `SELECT * FROM users WHERE id = ?`,
+      [id],
+      function (err, row) {
+        if (err) {
+          reject(err);
+        }
+        resolve(row);
+      }
+    );
+  });
+};
+
 const authService = {
   createUser,
   findByEmail,
+  findById,
 };
 
 export default authService;

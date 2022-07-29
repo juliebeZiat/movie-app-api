@@ -1,30 +1,51 @@
 import jwt from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
+import authService from '../auth/auth.service';
+import newError from '../utils/errors';
 
-const jwtMiddleware = (req: Request, res: Response, next: NextFunction) => {
+const jwtMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-      throw new Error('Missing authorization header!');
+      throw new newError.InvalidTokenAuthorization('Missing authorization header!');
     }
 
     const token = authHeader.split(' ')[1];
 
     if (!token) {
-      throw new Error('Authentication failed!');
+      throw new newError.InvalidTokenAuthorization('Authentication failed!');
+    }
+    
+    if (!process.env.SECRET_KEY) {
+      return;
     }
 
-    const verifiedToken = jwt.verify(token, process.env.SECRET_KEY as string);
     //? RESOLVE TS
+    const decodedToken = jwt.verify(token, process.env.SECRET_KEY) as { id: number, iat: number };
     
-    
-    //! VERIF SI USER EXISTE
+    const user = await authService.findById(decodedToken.id);
 
-    req.user = verifiedToken;
+    if (!user) {
+      throw new newError.UserNotFound(`User with id: ${decodedToken.id} does not exist`);
+    }
+    
+    req.user = decodedToken.id;
+    
     next();
   } catch (err) {
-    res.status(400).send('Invalid token !');
+    if (newError.isError(err)) {
+      if (err.name === 'userNotFound') {
+        res.status(404).send(err.message);
+        return;
+      }
+
+      if (err.name === 'invalidTokenAuthorization') {
+        res.status(401).send(err.message);
+        return;
+      }
+    }
+    res.status(500).send(err);
   }
 };
 

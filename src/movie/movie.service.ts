@@ -5,8 +5,9 @@ import { TMBDMovieDetails, TMDBMovie } from "../types/tmdb";
 const imageUrl = 'https://image.tmdb.org/t/p/original';
 
 export interface List {
-  list_id: number, 
-  user_id: number
+  id: number, 
+  user_id?: number,
+  movies?: number[]
 }
 
 const getPopular = async () => {
@@ -42,11 +43,11 @@ const getPopular = async () => {
     };
     return results.data.results.map(transformMovie);
   } catch (error) {
-    console.log(error);
+    throw Error('Error while getting popular movies');
   }
 };
 
-const getDetails = async (movieId: string) => {
+const getDetails = async (movieId: string): Promise<MovieDetails> => {
   try {
     const results = await axios.get(
       `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.API_KEY}`
@@ -67,20 +68,27 @@ const getDetails = async (movieId: string) => {
     };
     return transformData;
   } catch (error) {
-    console.log(error);
+    throw Error('Error while getting detail movie');
   }
 };
 
 const getList = async (userId: number): Promise<List> => {
   return new Promise((resolve, reject) => {
-    database.get(
-      'SELECT * FROM user_list WHERE user_id = ?',
+    database.all(
+      `SELECT user_list.list_id listId, user_list.user_id, lists.movie FROM user_list
+      LEFT JOIN lists
+      ON lists.list_id = user_list.list_id
+      WHERE user_id = ?`,
       [userId],
-      function (err, row) {
+      function (err, rows) {
         if (err) {
           reject(err);
         }
-        resolve(row);
+
+        const getMovies = rows.map((movies) => movies.movie);
+        const getListId = rows.map((listId) => listId.listId)[0];
+
+        resolve({id: getListId, movies: getMovies});
       }
     );
   });
@@ -102,7 +110,7 @@ const createList = async (userId: number): Promise<number> => {
   });
 };
 
-const addMovie = async (listId: number, movieId: number) => {
+const add = async (listId: number, movieId: number) => {
   return new Promise((resolve, reject) => {
     database.run(
       'INSERT INTO lists (list_id, movie) VALUES (?,?)',
@@ -117,16 +125,16 @@ const addMovie = async (listId: number, movieId: number) => {
   });
 };
 
-const getMovies = async (listId: number): Promise<{movie: number}[]> => {
+const remove = async (listId: number, movieId: number) => {
   return new Promise((resolve, reject) => {
-    database.all(
-      'SELECT movie FROM lists WHERE list_id = ?',
-      [listId],
-      function (err, row) {
+    database.run(
+      'DELETE FROM lists WHERE list_id = ? AND movie = ?',
+      [listId, movieId],
+      function (err) {
         if (err) {
           reject(err);
         }
-        resolve(row);
+        resolve(movieId);
       }
     );
   });
@@ -138,8 +146,8 @@ const movieService = {
   getDetails,
   getList,
   createList,
-  addMovie,
-  getMovies,
+  add,
+  remove,
 };
 
 export default movieService;
