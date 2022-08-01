@@ -26,7 +26,7 @@ const signIn = async (req: Request, res: Response) => {
 
     res.status(200).send({ user: user, access_token: accessToken });
   } catch (err) {
-    if (isError(err)) {
+    if (newError.isError(err)) {
       if (err.name === 'userNotFound') {
         res.status(404).send(err.message);
         return;
@@ -72,7 +72,7 @@ const signUp = async (req: Request, res: Response) => {
 
     res.status(201).send(authUser);
   } catch (error) {
-    if (isError(error)) {
+    if (newError.isError(error)) {
       if (error.name === 'invalidCredentials') {
         res.status(400).send(error.message);
         return;
@@ -80,10 +80,6 @@ const signUp = async (req: Request, res: Response) => {
     }
     res.status(500).send(error);
   }
-};
-
-const isError = (error: unknown): error is Error => {
-  return error instanceof Error;
 };
 
 const authController = {

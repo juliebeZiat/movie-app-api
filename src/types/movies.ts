@@ -21,4 +21,5 @@ export type MovieDetails = {
   release_date: string;
   vote_average: number;
   rating: number;
+  code?: string;
 };

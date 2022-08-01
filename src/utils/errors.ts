@@ -6,6 +6,14 @@ class InvalidCredentials extends Error {
   }
 }
 
+class InvalidTokenAuthorization extends Error {
+  name = 'invalidTokenAuthorization'
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 class UserAlreadyExists extends Error {
   name = 'userAlreadyExists'
   
@@ -30,11 +38,26 @@ class ItemAlreadyAdded extends Error {
   }
 }
 
+class ItemNotFound extends Error {
+  name = 'itemNotFound';
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+const isError = (error: unknown): error is Error => {
+  return error instanceof Error;
+};
+
 const newError = {
   InvalidCredentials,
+  InvalidTokenAuthorization,
   UserAlreadyExists,
   UserNotFound,
   ItemAlreadyAdded,
+  ItemNotFound,
+  isError,
 };
 
 export default newError;
