@@ -7,7 +7,7 @@ const imageUrl = 'https://image.tmdb.org/t/p/original';
 export interface List {
   id: number, 
   user_id?: number,
-  movies?: { movie: number }[]
+  moviesIds?: number[]
 }
 
 const getPopular = async () => {
@@ -72,7 +72,7 @@ const getDetails = async (movieId: string): Promise<MovieDetails> => {
   }
 };
 
-const getList = async (userId: number): Promise<List> => {
+const getMovies = async (userId: number): Promise<List> => {
   return new Promise((resolve, reject) => {
     database.all(
       `SELECT user_list.list_id listId, user_list.user_id, lists.movie FROM user_list
@@ -85,10 +85,10 @@ const getList = async (userId: number): Promise<List> => {
           reject(err);
         }
 
-        const getMovies = rows.map((movies) => { return {movie: movies.movie}});
+        const getMovies = rows.map((movies) => movies.movie).filter(movie => movie !== null);
         const getListId = rows.map((listId) => listId.listId)[0];
 
-        resolve({id: getListId, movies: getMovies });
+        resolve({id: getListId, moviesIds: getMovies });
       }
     );
   });
@@ -144,7 +144,7 @@ const remove = async (listId: number, movieId: number) => {
 const movieService = {
   getPopular,
   getDetails,
-  getList,
+  getMovies,
   createList,
   add,
   remove,

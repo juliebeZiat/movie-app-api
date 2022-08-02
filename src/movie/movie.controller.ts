@@ -22,16 +22,28 @@ const getDetails = async (req: Request, res: Response) => {
   }
 };
 
-const getList = async (req: Request, res: Response) => {
+const getMovies = async (req: Request, res: Response) => {
   const userId = req.userId;
 
   if (!userId) {
     throw new newError.UserNotFound('User id not found');
   }
+
+  
   
   try {
-    const list = await movieService.getList(userId);
-    res.send({ list });
+    const list = await movieService.getMovies(userId);
+
+    if (list.moviesIds === [] || !list.moviesIds) {
+      return;
+    }
+
+    const detailedMovies = await Promise.all(list.moviesIds.map((movieId) => {
+      const result = movieService.getDetails(movieId.toString());
+      return result;
+    }));
+    
+    res.send({ list, detailedMovies });
 
   } catch (err) {
     if (isError(err)) {
@@ -55,9 +67,9 @@ const add = async (req: Request, res: Response) => {
   const { movieId } = req.body;
 
   try {
-    const list = await movieService.getList(userId);
+    const list = await movieService.getMovies(userId);
 
-    const moviesIds = list.movies?.map((movieId) => movieId.movie);
+    const moviesIds = list.moviesIds?.map((movie) => movie);
     
     if (!moviesIds) {
       return;
@@ -101,9 +113,9 @@ const remove = async (req: Request, res: Response) => {
   const { movieId } = req.body;
 
   try {
-    const list = await movieService.getList(userId);
+    const list = await movieService.getMovies(userId);
 
-    const moviesIds = list.movies?.map((movieId) => movieId.movie);
+    const moviesIds = list.moviesIds?.map((movie) => movie);
     
     if (!moviesIds) {
       return;
@@ -134,7 +146,7 @@ const remove = async (req: Request, res: Response) => {
 const movieController = {
   getPopular,
   getDetails,
-  getList,
+  getMovies,
   add,
   remove,
 };
