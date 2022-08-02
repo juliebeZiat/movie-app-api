@@ -12,10 +12,6 @@ const port = 3000;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// ROUTES 
-app.use('/movie', movieRouter);
-app.use('/auth', authRouter);
-
 // CORS
 const options: cors.CorsOptions = {
     optionsSuccessStatus: 200
@@ -23,6 +19,9 @@ const options: cors.CorsOptions = {
 app.use(cors(options));
 app.use(express.json());
 
+// ROUTES 
+app.use('/movie', movieRouter);
+app.use('/auth', authRouter);
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`);

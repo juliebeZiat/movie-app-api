@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import newError from '../utils/errors';
+import newError, { isError } from '../utils/errors';
 import movieService from './movie.service';
 
 const getPopular = async (req: Request, res: Response) => {
@@ -23,27 +23,33 @@ const getDetails = async (req: Request, res: Response) => {
 };
 
 const getList = async (req: Request, res: Response) => {
-  const userId = req.user;
+  const userId = req.userId;
 
   if (!userId) {
-    throw new Error();
+    throw new newError.UserNotFound('User id not found');
   }
   
   try {
     const list = await movieService.getList(userId);
-    res.send({ userId: userId, list });
+    res.send({ list });
 
-  } catch (error) {
-    res.status(500).send(error);
+  } catch (err) {
+    if (isError(err)) {
+      if (err.name === 'userNotFound') {
+        res.status(404).send(err.message);
+        return;
+      }
+    }
+    res.status(500).send(err);
     res.end();
   }
 };
 
 const add = async (req: Request, res: Response) => {
-  const userId = req.user;
+  const userId = req.userId;
 
   if (!userId) {
-    throw new Error();
+    throw new newError.UserNotFound('User id not found');
   }
 
   const { movieId } = req.body;
@@ -51,11 +57,13 @@ const add = async (req: Request, res: Response) => {
   try {
     const list = await movieService.getList(userId);
 
-    if (!list.movies) {
+    const moviesIds = list.movies?.map((movieId) => movieId.movie);
+    
+    if (!moviesIds) {
       return;
     }
 
-    if (list.movies.includes(movieId)) {
+    if (moviesIds.includes(movieId)) {
       throw new newError.ItemAlreadyAdded('This item is already added to the list');
     };
 
@@ -70,9 +78,13 @@ const add = async (req: Request, res: Response) => {
     res.send({ newMovie: movieId, title: isMovieExists.title });
 
   } catch (err) {
-    if (newError.isError(err)) {
+    if (isError(err)) {
       if (err.name === 'itemAlreadyAdded') {
         res.status(409).send(err.message);
+        return;
+      }
+      if (err.name === 'userNotFound') {
+        res.status(404).send(err.message);
         return;
       }
     }
@@ -80,10 +92,10 @@ const add = async (req: Request, res: Response) => {
 };
 
 const remove = async (req: Request, res: Response) => {
-  const userId = req.user;
+  const userId = req.userId;
 
   if (!userId) {
-    throw new Error();
+    throw new newError.UserNotFound('User id not found');
   }
 
   const { movieId } = req.body;
@@ -91,21 +103,27 @@ const remove = async (req: Request, res: Response) => {
   try {
     const list = await movieService.getList(userId);
 
-    if (!list.movies) {
+    const moviesIds = list.movies?.map((movieId) => movieId.movie);
+    
+    if (!moviesIds) {
       return;
     }
 
-    if (!list.movies.includes(movieId)) {
+    if (!moviesIds.includes(movieId)) {
       throw new newError.ItemNotFound('This item is not in the list');
     };
 
     await movieService.remove(list.id, movieId);
 
-    res.send({ removedMovie: movieId });
+    res.status(204).send({ removedMovie: movieId });
 
   } catch (err) {
-    if (newError.isError(err)) {
+    if (isError(err)) {
       if (err.name === 'itemNotFound') {
+        res.status(404).send(err.message);
+        return;
+      }
+      if (err.name === 'userNotFound') {
         res.status(404).send(err.message);
         return;
       }

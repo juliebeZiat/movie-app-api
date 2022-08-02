@@ -7,7 +7,7 @@ const imageUrl = 'https://image.tmdb.org/t/p/original';
 export interface List {
   id: number, 
   user_id?: number,
-  movies?: number[]
+  movies?: { movie: number }[]
 }
 
 const getPopular = async () => {
@@ -85,10 +85,10 @@ const getList = async (userId: number): Promise<List> => {
           reject(err);
         }
 
-        const getMovies = rows.map((movies) => movies.movie);
+        const getMovies = rows.map((movies) => { return {movie: movies.movie}});
         const getListId = rows.map((listId) => listId.listId)[0];
 
-        resolve({id: getListId, movies: getMovies});
+        resolve({id: getListId, movies: getMovies });
       }
     );
   });

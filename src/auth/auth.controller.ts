@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import validate from '../utils/validation';
 import authService from './auth.service';
-import newError from '../utils/errors';
+import newError, { isError } from '../utils/errors';
 import movieService from '../movie/movie.service';
 
 const signIn = async (req: Request, res: Response) => {
@@ -26,7 +26,7 @@ const signIn = async (req: Request, res: Response) => {
 
     res.status(200).send({ user: user, access_token: accessToken });
   } catch (err) {
-    if (newError.isError(err)) {
+    if (isError(err)) {
       if (err.name === 'userNotFound') {
         res.status(404).send(err.message);
         return;
@@ -72,7 +72,7 @@ const signUp = async (req: Request, res: Response) => {
 
     res.status(201).send(authUser);
   } catch (error) {
-    if (newError.isError(error)) {
+    if (isError(error)) {
       if (error.name === 'invalidCredentials') {
         res.status(400).send(error.message);
         return;

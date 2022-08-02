@@ -46,7 +46,7 @@ class ItemNotFound extends Error {
   }
 }
 
-const isError = (error: unknown): error is Error => {
+export const isError = (error: unknown): error is Error => {
   return error instanceof Error;
 };
 
@@ -57,7 +57,6 @@ const newError = {
   UserNotFound,
   ItemAlreadyAdded,
   ItemNotFound,
-  isError,
 };
 
 export default newError;

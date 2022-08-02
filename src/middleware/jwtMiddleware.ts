@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
 import authService from '../auth/auth.service';
-import newError from '../utils/errors';
+import newError, { isError } from '../utils/errors';
 
 const jwtMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -21,7 +21,6 @@ const jwtMiddleware = async (req: Request, res: Response, next: NextFunction) =>
       return;
     }
 
-    //? RESOLVE TS
     const decodedToken = jwt.verify(token, process.env.SECRET_KEY) as { id: number, iat: number };
     
     const user = await authService.findById(decodedToken.id);
@@ -30,11 +29,11 @@ const jwtMiddleware = async (req: Request, res: Response, next: NextFunction) =>
       throw new newError.UserNotFound(`User with id: ${decodedToken.id} does not exist`);
     }
     
-    req.user = decodedToken.id;
+    req.userId = decodedToken.id;
     
     next();
   } catch (err) {
-    if (newError.isError(err)) {
+    if (isError(err)) {
       if (err.name === 'userNotFound') {
         res.status(404).send(err.message);
         return;
