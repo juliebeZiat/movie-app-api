@@ -23,3 +23,8 @@ export type MovieDetails = {
   rating: number;
   code?: string;
 };
+
+export type SearchMovie = {
+  id: number;
+  title: string;
+}

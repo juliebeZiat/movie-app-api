@@ -28,8 +28,6 @@ const getMovies = async (req: Request, res: Response) => {
   if (!userId) {
     throw new newError.UserNotFound('User id not found');
   }
-
-  
   
   try {
     const list = await movieService.getMovies(userId);
@@ -122,12 +120,12 @@ const remove = async (req: Request, res: Response) => {
     }
 
     if (!moviesIds.includes(movieId)) {
-      throw new newError.ItemNotFound('This item is not in the list');
+      throw new newError.ItemNotFound(`Item ${movieId} is not in the list`);
     };
 
     await movieService.remove(list.id, movieId);
 
-    res.status(204).send({ removedMovie: movieId });
+    res.send({ removedMovie: movieId });
 
   } catch (err) {
     if (isError(err)) {
@@ -143,12 +141,23 @@ const remove = async (req: Request, res: Response) => {
   }
 };
 
+const search = async (req: Request, res: Response) => {
+  try {
+    const results = await movieService.search(req.body.query);
+    return res.send(results);
+  } catch (error) {
+    res.status(500).send(error);
+    res.end();
+  }
+};
+
 const movieController = {
   getPopular,
   getDetails,
   getMovies,
   add,
   remove,
+  search,
 };
 
 export default movieController;

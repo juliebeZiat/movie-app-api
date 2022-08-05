@@ -1,6 +1,6 @@
 import axios from "axios";
 import { database } from "../app";
-import { GenreType, Movie, MovieDetails } from "../types/movies";
+import { GenreType, Movie, MovieDetails, SearchMovie } from "../types/movies";
 import { TMBDMovieDetails, TMDBMovie } from "../types/tmdb";
 const imageUrl = 'https://image.tmdb.org/t/p/original';
 
@@ -94,7 +94,6 @@ const getMovies = async (userId: number): Promise<List> => {
   });
 };
 
-
 const createList = async (userId: number): Promise<number> => {
   return new Promise((resolve, reject) => {
     database.run(
@@ -140,6 +139,25 @@ const remove = async (listId: number, movieId: number) => {
   });
 };
 
+const search = async (query: string) => {
+  try {
+    const results = await axios.get(
+      `https://api.themoviedb.org/3/search/movie?api_key=${process.env.API_KEY}&language=en-US&query=${query}&page=1&include_adult=false`
+    );
+
+    const transformMovie = (movie: SearchMovie) => {
+      return {
+        _id: movie.id,
+        title: movie.title,
+      };
+    };
+    
+    return results.data.results.map(transformMovie);
+
+  } catch (error) {
+    throw Error('Error while searching movie');
+  }
+};
 
 const movieService = {
   getPopular,
@@ -148,6 +166,7 @@ const movieService = {
   createList,
   add,
   remove,
+  search
 };
 
 export default movieService;

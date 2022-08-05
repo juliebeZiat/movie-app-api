@@ -23,10 +23,10 @@ const createUser = async (userDto: {
         }
       );
     });
-    const accessToken = jwt.sign({ id: userId }, process.env.SECRET_KEY as string);
+    const access_token = jwt.sign({ id: userId }, process.env.SECRET_KEY as string);
     return {
       user: { name: userDto.name, email: userDto.email, id: userId },
-      accessToken,
+      access_token,
     };
 
   } catch (error) {
@@ -60,7 +60,7 @@ const findById = (id: number): Promise<IUser> => {
         if (err) {
           reject(err);
         }
-        resolve(row);
+        resolve(row);        
       }
     );
   });

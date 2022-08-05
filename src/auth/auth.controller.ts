@@ -82,9 +82,27 @@ const signUp = async (req: Request, res: Response) => {
   }
 };
 
+const getUser = async (req: Request, res: Response) => {
+  const userId = req.userId;
+
+  if (!userId) {
+    throw new newError.UserNotFound('User id not found');
+  }
+
+  try {
+    const user = await authService.findById(userId);
+    res.send({id: user.id, name: user.name, email: user.email});
+
+  } catch (error) {
+    console.log(error);
+    
+  }
+}
+
 const authController = {
   signIn,
   signUp,
+  getUser,
 };
 
 export default authController;
